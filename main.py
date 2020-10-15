@@ -40,10 +40,11 @@ if __name__=="__main__":
             print('KANA_CAM is in essid')
             subprocess.call(['sudo','nmcli','d','wifi','con','KANA_CAM','password','1q2w3e4r'])
             url="http://192.168.4.1/SVGA"
-
-            v = video(url)
-            v.show(save=True)
-            print('1')
+            try:
+                v = video(url)
+                v.show(save=True)
+            except Exception as e:
+                logger.info(e)
             # try:
                 # v.show(save=True)
                 # print('1')
