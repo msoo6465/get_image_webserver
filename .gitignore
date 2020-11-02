@@ -5,3 +5,7 @@
 *.dll
 *.exe
 *.log
+
+# compile file #
+################
+__pycache__

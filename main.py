@@ -29,11 +29,11 @@ if __name__=="__main__":
             url="http://192.168.4.1/SVGA"
             try:
                 v = video(url)
-                v.show()
+                v.show(debug=True,send=False)
 
             except Exception as e:
-                print(1)
                 logger.info("Disconnect")
+                logger.info("reaseon : " + e)
                 subprocess.call(['sudo','nmcli','con','down','KANA_CAM'])
                 subprocess.call(['sudo','nmcli','con','delete' ,'KANA_CAM'])
                 cv2.destroyAllWindows()

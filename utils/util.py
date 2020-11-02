@@ -24,14 +24,32 @@ class video():
     
     def __init__(self,url):
         self.url = url
-        self.stream=urlopen(url,timeout = 2.0)
+        self.stream=urlopen(url,timeout = 10.0)
+        self.reset=True
 
-        self.kana_type = ['fall_down','stumble','motionless','seizure']
-        self.feline_type = ['stand','touch_doorlock','peep','eavesdrop','youch_bell','knock','look_around','put_object','take_object','take_object','use_device','stick_leaflet','hold_weapon']
+        self.kana_type = {'fall_down':'어르신의 "중심을 잃고 쓰러짐"이(가) 감지되었습니다.' ,
+                            'stumble':'어르신의 "비틀거림"이(가) 감지되었습니다.',
+                            'motionless':'어르신의 "움직임"이(가) 감지되지 않습니다.',
+                            'seizure':'어르신의 "발작,간질"이(가) 감지되었습니다.',
+                            'reset_test':'초기 카메라 테스트''}
+
+        self.feline_type = {'stand':'문 앞에 서있는 사람 감지',
+                            'touch_doorlock':'도어락 조작 감지',
+                            'peep':'외서경에 눈을 대는 행위 감지',
+                            'eavesdrop':'문에 귀를 대는 행위 감지',
+                            'touch_bell':'초인종 조작 행위 감지',
+                            'knock':'노크 행위 감지',
+                            'put_object':'물건 놓는 행위 감지',
+                            'take_object':'절도 의심 행위 감지',
+                            'use_device':'전자기기 조작행위 감지',
+                            'stick_leaflet':'전단지 부착 행위 감지',
+                            'hold_weapon':'무기 소지자 감지',
+                            'reset_test':'초기 카메라 테스트'}
+
         self.tot_time = 0
         self.count = 0
 
-    def send_server(self,image,mode,gkey):
+    def send_server(self,image,mode,gkey,reset):
         url = 'http://121.151.110.163:9001/'
         token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOjEsImVtYWlsIjoidGVzdEB0ZXN0LmNvbSIsIndobyI6Im1lbWJlciIsImlhdCI6MTYwMDI0NDIwNywiZXhwIjoxNjMxNzgwMjA3LCJpc3MiOiJrYW5hZmVsaW5lLmNvLmtyIiwic3ViIjoidXNlcmluZm8ifQ.DAOURYXRfQBy5dCGwqWhQwD7DFxlK1_wP6LKYEQJ4e8'
         headers = { 'i-access-token': 'kanaiamdsilfamadsjfoge', 'x-access-token': token}
@@ -43,18 +61,25 @@ class video():
         if mode == 'feline':
             print(url+'upload')
             data = {'serial': 'test-serial-2', 'type': self.feline_type[int(random.choice(string.digits)+random.choice(string.digits))%len(self.feline_type)], 'contents': 'This is for test', 'gkey': str(gkey)}
+            if reset:
+                data['type']='reset_test'
+                data['contents']=self.feline_type['reset_test']
             print(data)
             # res = requests.post(url+'upload',data=data,headers=headers,files=files)
 
         elif mode == 'kana':
             print(url+'camlog/log')
-            data = {'serial': 'test-serial-2', 'type': self.kana_type[int(random.choice(string.digits)+random.choice(string.digits))%len(self.kana_type)], 'contents': 'This is for test', 'gkey':str(gkey)}
+            # data = {'serial': 'C3WQ0VGUTE', 'type': self.kana_type[int(random.choice(string.digits)+random.choice(string.digits))%len(self.kana_type)], 'contents': 'This is for test', 'gkey':str(gkey)}
+            data = {'serial': 'C3WQ0VGUTE', 'type': 'motionless', 'contents': self.kana_type['motionless'], 'gkey':str(gkey)}
+            if reset:
+                data['type']='reset_test'
+                data['contents']=self.feline_type['reset_test']
             print(data)
-            res = requests.post(url+'camlog/log',data=data,headers=headers)
+            # res = requests.post(url+'camlog/log',data=data,headers=headers)
         
-        print(res.status_code)
+        # print(res.status_code)
 
-    def show(self,save= False,debug = False):
+    def show(self,save= False,debug = False,send=True):
         bts=b''
         imgs = []
         start_time = time.time()
@@ -75,7 +100,6 @@ class video():
                 self.tot_time = 0
                 self.count = 0
                 bts = b''
-                print(1)
                 continue
 
             if jpghead>-1 and jpgend>-1:
@@ -117,17 +141,18 @@ class video():
                 if time.time() - start_time > 3:
                     if time.time()-sample_time > 20:
                         sample_time = time.time()
-                        
+                        gkey = ''
                         for i in range(_LENGTH):
+                            self.reset = False
                             gkey += random.choice(string.ascii_letters)
 
                     start_time = time.time()
-                    print(gkey)
-                    self.send_server(img,mode='kana',gkey=gkey)
+                    if send:
+                        self.send_server(img,mode='kana',gkey=gkey,reset=self.reset)
 
             k=cv2.waitKey(1)
             if k & 0xFF==ord('q'):
-                print(self.tot_time/self.count)
+                logger.info(self.tot_time/self.count)
                 subprocess.call(['sudo','nmcli','con','down','KANA_CAM'])
                 subprocess.call(['sudo','nmcli','con','delete' ,'KANA_CAM'])
                 exit()
