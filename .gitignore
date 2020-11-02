@@ -8,4 +8,5 @@
 
 # compile file #
 ################
-__pycache__
+/__pycache__
+/logs

@@ -58,25 +58,24 @@ class video():
         _, img_encoded = cv2.imencode('.jpg', image)
 
         files = [('detectedImages', ('img', img_encoded.tostring(), 'image/jpeg'))]
+
         if mode == 'feline':
-            print(url+'upload')
             data = {'serial': 'test-serial-2', 'type': self.feline_type[int(random.choice(string.digits)+random.choice(string.digits))%len(self.feline_type)], 'contents': 'This is for test', 'gkey': str(gkey)}
             if reset:
                 data['type']='reset_test'
                 data['contents']=self.feline_type['reset_test']
-            print(data)
+            
             # res = requests.post(url+'upload',data=data,headers=headers,files=files)
 
         elif mode == 'kana':
-            print(url+'camlog/log')
             # data = {'serial': 'C3WQ0VGUTE', 'type': self.kana_type[int(random.choice(string.digits)+random.choice(string.digits))%len(self.kana_type)], 'contents': 'This is for test', 'gkey':str(gkey)}
             data = {'serial': 'C3WQ0VGUTE', 'type': 'motionless', 'contents': self.kana_type['motionless'], 'gkey':str(gkey)}
             if reset:
                 data['type']='reset_test'
                 data['contents']=self.feline_type['reset_test']
-            print(data)
             # res = requests.post(url+'camlog/log',data=data,headers=headers)
-        
+        logger.info(json.dumps(data))
+        logger.info('=================')
         # print(res.status_code)
 
     def show(self,save= False,debug = False,send=True):
@@ -176,6 +175,4 @@ class video():
             if url[0]=='dis':
                 subprocess.call(['sudo','nmcli','con','down','KANA_CAM'])
                 return
-            print(e)
-        print(self.stream)
         time.sleep(2)
